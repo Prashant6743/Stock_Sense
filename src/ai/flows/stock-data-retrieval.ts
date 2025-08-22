@@ -20,6 +20,7 @@ const StockDataOutputSchema = z.object({
   price: z.number().describe('The current price of the stock.'),
   volume: z.number().describe('The current trading volume of the stock.'),
   historicalData: z.string().describe('The historical stock data as a string for recent 1-minute intervals.'),
+  latestTimestamp: z.string().describe('The timestamp of the most recent data point.'),
 });
 export type StockDataOutput = z.infer<typeof StockDataOutputSchema>;
 
@@ -67,10 +68,13 @@ const stockDataRetrievalFlow = ai.defineFlow(
 
       const price = parseFloat(globalQuote['05. price']);
       const volume = parseInt(globalQuote['06. volume'], 10);
+      
+      const historicalDataEntries = Object.entries(timeSeries)
+        .slice(0, 30); // Take the last 30 available 1-min intervals
 
-      const historicalDataPoints = Object.entries(timeSeries)
-        .slice(0, 30) // Take the last 30 available 1-min intervals
-        .map(([dateTime, data]) => {
+      const latestTimestamp = historicalDataEntries.length > 0 ? historicalDataEntries[0][0] : new Date().toISOString();
+
+      const historicalDataPoints = historicalDataEntries.map(([dateTime, data]) => {
             const closePrice = (data as any)['4. close'];
             const time = new Date(dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return `Time: ${time}, Close Price: $${parseFloat(closePrice).toFixed(2)}`;
@@ -78,7 +82,7 @@ const stockDataRetrievalFlow = ai.defineFlow(
         
       const historicalData = historicalDataPoints.join('\n');
 
-      return { price, volume, historicalData };
+      return { price, volume, historicalData, latestTimestamp };
     } catch (error: any) {
       console.error("Error fetching from Alpha Vantage:", error);
       // Add a check for API limit messages

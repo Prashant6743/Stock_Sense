@@ -13,6 +13,7 @@ import type { ChartDataPoint } from '@/app/actions';
 interface StockChartProps {
   data: ChartDataPoint[];
   ticker: string;
+  timestamp: string;
 }
 
 const chartConfig = {
@@ -22,12 +23,18 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function StockChart({ data, ticker }: StockChartProps) {
+export function StockChart({ data, ticker, timestamp }: StockChartProps) {
+  const chartDate = new Date(timestamp).toLocaleDateString([], {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle>{ticker.toUpperCase()} Price Trend (Last 30 Mins)</CardTitle>
-        <CardDescription>Intraday 1-minute interval data for trend analysis.</CardDescription>
+        <CardDescription>Intraday 1-minute interval data for {chartDate}.</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">

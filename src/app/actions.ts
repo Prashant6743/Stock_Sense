@@ -18,6 +18,7 @@ export type StockInfoPayload = {
   prediction: Prediction;
   chartData: ChartDataPoint[];
   ticker: string;
+  latestTimestamp: string;
 };
 
 // Helper to generate mock chart data array from historical string
@@ -77,7 +78,7 @@ export async function fetchStockInfo(
 
     const chartData = parseHistoricalDataToChart(historicalData);
 
-    return { stockData, prediction, chartData, ticker };
+    return { stockData, prediction, chartData, ticker, latestTimestamp: retrievedData.latestTimestamp };
   } catch (e: any) {
     console.error(e);
     return { error: e.message || 'An unexpected error occurred while fetching stock data. Please try again later.' };
