@@ -81,7 +81,7 @@ const stockDataRetrievalFlow = ai.defineFlow(
         });
       
       // Add the real-time quote as the last data point
-      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const nowTime = new Date(latestTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       historicalDataPoints.push(`Time: ${nowTime}, Close Price: $${price.toFixed(2)}`);
         
       const historicalData = historicalDataPoints.join('\n');
