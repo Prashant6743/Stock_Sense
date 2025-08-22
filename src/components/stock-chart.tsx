@@ -26,8 +26,8 @@ export function StockChart({ data, ticker }: StockChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{ticker.toUpperCase()} Price Trend (30 Days)</CardTitle>
-        <CardDescription>Mock historical data visualization for trend analysis.</CardDescription>
+        <CardTitle>{ticker.toUpperCase()} Price Trend (Last 30 Mins)</CardTitle>
+        <CardDescription>Intraday 1-minute interval data for trend analysis.</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -43,24 +43,30 @@ export function StockChart({ data, ticker }: StockChartProps) {
           >
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
-              dataKey="day"
+              dataKey="time"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => (value % 5 === 0 ? `Day ${value}` : '')}
+              tickFormatter={(value, index) => {
+                // Display a tick every 5 minutes
+                if (index % 5 === 0) {
+                  return value;
+                }
+                return '';
+              }}
             />
             <YAxis
               tickLine={false}
               axisLine={false}
               tickMargin={8}
               domain={['dataMin', 'dataMax']}
-              tickFormatter={(value) => `$${Number(value).toFixed(0)}`}
+              tickFormatter={(value) => `$${Number(value).toFixed(2)}`}
             />
             <ChartTooltip
               cursor={true}
               content={
                 <ChartTooltipContent
-                  labelFormatter={(label) => `Day ${label}`}
+                  labelFormatter={(label) => `Time ${label}`}
                   formatter={(value) => `$${(value as number).toFixed(2)}`}
                   indicator="dot"
                 />
