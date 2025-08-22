@@ -36,17 +36,19 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setStockInfo(null);
-    setCurrentTicker(ticker.toUpperCase());
+    setCurrentTicker(null); // Clear current ticker before new search
 
     const result = await fetchStockInfo({ ticker });
 
     if (result.error) {
       setError(result.error);
     } else {
-      setStockInfo(result as StockInfoPayload);
+      const payload = result as StockInfoPayload;
+      setStockInfo(payload);
+      setCurrentTicker(payload.ticker); // Set the ticker from the response
       const newRecent = [
-        ticker.toUpperCase(),
-        ...recentSearches.filter((t) => t !== ticker.toUpperCase()),
+        payload.ticker,
+        ...recentSearches.filter((t) => t !== payload.ticker),
       ].slice(0, 5);
       setRecentSearches(newRecent);
       try {
@@ -73,8 +75,7 @@ export default function Home() {
             Stock Sense
           </h1>
           <p className="text-muted-foreground max-w-md">
-            Enter a stock ticker to get AI-powered analysis and price
-            prediction.
+            Enter a stock ticker or company name for AI-powered analysis.
           </p>
         </header>
 

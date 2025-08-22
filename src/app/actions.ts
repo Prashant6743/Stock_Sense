@@ -2,10 +2,11 @@
 
 import { getStockData } from '@/ai/flows/stock-data-retrieval';
 import { predictStockTrend } from '@/ai/flows/price-prediction';
+import { getTickerSymbol } from '@/ai/flows/ticker-retrieval';
 import { z } from 'zod';
 
 const FormSchema = z.object({
-  ticker: z.string().min(1, 'Ticker is required').max(10, 'Ticker is too long'),
+  ticker: z.string().min(1, 'Ticker is required').max(50, 'Input is too long'),
 });
 
 // Define types for the data payload
@@ -16,6 +17,7 @@ export type StockInfoPayload = {
   stockData: StockData;
   prediction: Prediction;
   chartData: ChartDataPoint[];
+  ticker: string;
 };
 
 // Helper to generate mock chart data array from historical string
@@ -42,9 +44,17 @@ export async function fetchStockInfo(
   try {
     const validatedFields = FormSchema.safeParse(values);
     if (!validatedFields.success) {
-      return { error: 'Invalid ticker symbol.' };
+      return { error: 'Invalid input.' };
     }
-    const { ticker } = validatedFields.data;
+    const { ticker: query } = validatedFields.data;
+
+    // Get the ticker symbol from the user's query
+    const tickerResult = await getTickerSymbol({ query });
+    if (!tickerResult || !tickerResult.ticker) {
+      return { error: `Could not find a ticker symbol for "${query}".` };
+    }
+    const ticker = tickerResult.ticker.toUpperCase();
+
 
     const retrievedData = await getStockData({ ticker });
 
@@ -66,7 +76,7 @@ export async function fetchStockInfo(
 
     const chartData = parseHistoricalDataToChart(historicalData);
 
-    return { stockData, prediction, chartData };
+    return { stockData, prediction, chartData, ticker };
   } catch (e: any) {
     console.error(e);
     return { error: e.message || 'An unexpected error occurred while fetching stock data. Please try again later.' };
