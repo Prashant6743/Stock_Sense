@@ -68,17 +68,21 @@ const stockDataRetrievalFlow = ai.defineFlow(
 
       const price = parseFloat(globalQuote['05. price']);
       const volume = parseInt(globalQuote['06. volume'], 10);
+      const latestTimestamp = globalQuote['07. latest trading day'];
       
       const historicalDataEntries = Object.entries(timeSeries)
-        .slice(0, 30); // Take the last 30 available 1-min intervals
-
-      const latestTimestamp = historicalDataEntries.length > 0 ? historicalDataEntries[0][0] : new Date().toISOString();
+        .slice(0, 29) // Take the last 29 available 1-min intervals
+        .reverse(); // reverse to have oldest first
 
       const historicalDataPoints = historicalDataEntries.map(([dateTime, data]) => {
             const closePrice = (data as any)['4. close'];
             const time = new Date(dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return `Time: ${time}, Close Price: $${parseFloat(closePrice).toFixed(2)}`;
         });
+      
+      // Add the real-time quote as the last data point
+      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      historicalDataPoints.push(`Time: ${nowTime}, Close Price: $${price.toFixed(2)}`);
         
       const historicalData = historicalDataPoints.join('\n');
 

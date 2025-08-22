@@ -35,8 +35,7 @@ const parseHistoricalDataToChart = (historicalData: string): ChartDataPoint[] =>
             }
             return null;
         })
-        .filter((item): item is ChartDataPoint => item !== null)
-        .reverse();
+        .filter((item): item is ChartDataPoint => item !== null);
 };
 
 
