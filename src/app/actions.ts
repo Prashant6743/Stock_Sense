@@ -18,28 +18,21 @@ export type StockInfoPayload = {
   chartData: ChartDataPoint[];
 };
 
-// Helper to generate mock historical data string for the prediction model
-const generateMockHistoricalDataString = (price: number): string => {
-  const dataPoints = [];
-  let currentPrice = price;
-  for (let i = 0; i < 30; i++) {
-    const change = (Math.random() - 0.45) * (currentPrice * 0.05);
-    currentPrice += change;
-    dataPoints.push(`Day ${30 - i}: $${currentPrice.toFixed(2)}`);
-  }
-  return dataPoints.join('\n');
-};
-
-// Helper to generate mock chart data array
-const generateMockChartData = (price: number): ChartDataPoint[] => {
-    let lastPrice = price * (1 + (Math.random() - 0.6) * 0.2);
-    return Array.from({ length: 30 }, (_, i) => {
-        lastPrice *= 1 + (Math.random() - 0.48) * 0.08;
-        return {
-            day: i + 1,
-            price: parseFloat(lastPrice.toFixed(2)),
-        }
-    });
+// Helper to generate mock chart data array from historical string
+const parseHistoricalDataToChart = (historicalData: string): ChartDataPoint[] => {
+    return historicalData.split('\n')
+        .map((line, index) => {
+            const priceMatch = line.match(/Close Price: \$([\d.]+)/);
+            if (priceMatch) {
+                return {
+                    day: 30 - index,
+                    price: parseFloat(priceMatch[1]),
+                };
+            }
+            return null;
+        })
+        .filter((item): item is ChartDataPoint => item !== null)
+        .reverse();
 };
 
 
@@ -53,24 +46,29 @@ export async function fetchStockInfo(
     }
     const { ticker } = validatedFields.data;
 
-    const stockData = await getStockData({ ticker });
+    const retrievedData = await getStockData({ ticker });
 
-    if (!stockData || typeof stockData.price !== 'number' || typeof stockData.volume !== 'number') {
+    if (!retrievedData || typeof retrievedData.price !== 'number' || typeof retrievedData.volume !== 'number') {
       return { error: 'Could not retrieve data for the specified ticker. Please check the symbol and try again.' };
     }
+    
+    const stockData = {
+        price: retrievedData.price,
+        volume: retrievedData.volume,
+    }
 
-    const historicalData = generateMockHistoricalDataString(stockData.price);
+    const historicalData = retrievedData.historicalData;
 
     const prediction = await predictStockTrend({
       ticker,
       historicalData,
     });
 
-    const chartData = generateMockChartData(stockData.price);
+    const chartData = parseHistoricalDataToChart(historicalData);
 
     return { stockData, prediction, chartData };
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
-    return { error: 'An unexpected error occurred while fetching stock data. Please try again later.' };
+    return { error: e.message || 'An unexpected error occurred while fetching stock data. Please try again later.' };
   }
 }
