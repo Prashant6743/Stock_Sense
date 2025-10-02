@@ -37,7 +37,7 @@ const recommendationMap: Record<
 };
 
 export function StockDisplay({ data, ticker }: StockDisplayProps) {
-  const { stockData, prediction, chartData } = data;
+  const { stockData, prediction, chartData, latestTimestamp } = data;
   const recommendation = recommendationMap[prediction.recommendation];
 
   return (
@@ -61,7 +61,7 @@ export function StockDisplay({ data, ticker }: StockDisplayProps) {
           value={stockData.volume.toLocaleString()}
         />
       </div>
-      <StockChart data={chartData} ticker={ticker} />
+      <StockChart data={chartData} ticker={ticker} timestamp={latestTimestamp} />
     </div>
   );
 }

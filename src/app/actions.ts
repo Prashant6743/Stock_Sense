@@ -12,29 +12,30 @@ const FormSchema = z.object({
 // Define types for the data payload
 export type StockData = { price: number; volume: number };
 export type Prediction = { recommendation: 'buy' | 'sell' | 'hold' };
-export type ChartDataPoint = { day: number; price: number };
+export type ChartDataPoint = { time: string; price: number };
 export type StockInfoPayload = {
   stockData: StockData;
   prediction: Prediction;
   chartData: ChartDataPoint[];
   ticker: string;
+  latestTimestamp: string;
 };
 
 // Helper to generate mock chart data array from historical string
 const parseHistoricalDataToChart = (historicalData: string): ChartDataPoint[] => {
     return historicalData.split('\n')
-        .map((line, index) => {
+        .map((line) => {
+            const timeMatch = line.match(/Time: (.*?),/);
             const priceMatch = line.match(/Close Price: \$([\d.]+)/);
-            if (priceMatch) {
+            if (timeMatch && priceMatch) {
                 return {
-                    day: 30 - index,
+                    time: timeMatch[1],
                     price: parseFloat(priceMatch[1]),
                 };
             }
             return null;
         })
-        .filter((item): item is ChartDataPoint => item !== null)
-        .reverse();
+        .filter((item): item is ChartDataPoint => item !== null);
 };
 
 
@@ -76,7 +77,7 @@ export async function fetchStockInfo(
 
     const chartData = parseHistoricalDataToChart(historicalData);
 
-    return { stockData, prediction, chartData, ticker };
+    return { stockData, prediction, chartData, ticker, latestTimestamp: retrievedData.latestTimestamp };
   } catch (e: any) {
     console.error(e);
     return { error: e.message || 'An unexpected error occurred while fetching stock data. Please try again later.' };
